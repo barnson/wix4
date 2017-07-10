@@ -76,11 +76,6 @@
       Text="Could not find public (or private) key file for WiX build at: $(AssemblyOriginatorKeyFile)" />
 
     <Error
-      Code="WIXBUILD002"
-      Condition=" '$(PlatformSdkBinPath)' == '' or !Exists('$(PlatformSdkBinPath)')"
-      Text="Error the &quot;Microsoft Windows SDK for Windows 7 and .NET Framework 4&quot; or &quot;Visual Studio 2010&quot; must be installed." />
-
-    <Error
       Code="WIXBUILD004"
       Condition="!Exists('$(HelpCompiler)')"
       Text="$(HelpCompiler) does not exist. Please install the HTML Help Workshop that is part of the HTML Help SDK." />
@@ -120,6 +115,10 @@
       Condition=" $(BuildArm) and !(Exists('$(PlatformSdkArmLibraryRoot)')) "
       Text="No suitable Windows SDK found to build ARM" />
 
+    <Error
+      Code="WIXBUILD014"
+      Condition=" '$(WindowsSdkDir)' == '' or !(Exists('$(WindowsSdkDir)')) "
+      Text="Build WiX from a Visual Studio Developer Command Prompt" />
   </Target>
 
   <!--
@@ -269,7 +268,7 @@
     </PrepareResourcesDependsOn>
     <ResFile>$(IntermediateOutputPath)$(TargetName).res</ResFile>
     <RcIncludeStandardPaths>true</RcIncludeStandardPaths>
-    <RcStandardPaths>$(WixVersionPath)\;$(WixRoot)src\common;$(PlatformSdkIncludePath);$(VCIncludePath)</RcStandardPaths>
+    <RcStandardPaths>$(WixVersionPath)\;$(WixRoot)src\common</RcStandardPaths>
   </PropertyGroup>
 
   <Target
@@ -299,7 +298,7 @@
       <_RcUsingSdkSwitch>/D &quot;_USING_V110_SDK71_&quot;</_RcUsingSdkSwitch>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(PlatformSdkBinPath)rc.exe&quot; /nologo /fo &quot;$(ResFile)&quot; $(_RcIncludeSwitch) $(_RcPreprocessorSwitch) $(_RcUsingSdkSwitch) &quot;@(EmbeddedNativeResource)&quot;"
+    <Exec Command="rc.exe /nologo /fo &quot;$(ResFile)&quot; $(_RcIncludeSwitch) $(_RcPreprocessorSwitch) $(_RcUsingSdkSwitch) &quot;@(EmbeddedNativeResource)&quot;"
           Outputs="$(ResFile)" />
 
     <PropertyGroup>
