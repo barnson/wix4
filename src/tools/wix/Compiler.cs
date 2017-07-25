@@ -1143,25 +1143,28 @@ namespace WixToolset
                 this.core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Id"));
             }
 
-            HashSet<string> uniqueContexts = new HashSet<string>();
-            foreach (string context in contexts)
+            if (null != contexts)
             {
-                if (uniqueContexts.Contains(context))
+                HashSet<string> uniqueContexts = new HashSet<string>();
+                foreach (string context in contexts)
                 {
-                    this.core.OnMessage(WixErrors.DuplicateContextValue(sourceLineNumbers, context));
-                }
-                else
-                {
-                    uniqueContexts.Add(context);
-                }
+                    if (uniqueContexts.Contains(context))
+                    {
+                        this.core.OnMessage(WixErrors.DuplicateContextValue(sourceLineNumbers, context));
+                    }
+                    else
+                    {
+                        uniqueContexts.Add(context);
+                    }
 
-                if (context.EndsWith("32", StringComparison.Ordinal))
-                {
-                    class32bit = true;
-                }
-                else
-                {
-                    class16bit = true;
+                    if (context.EndsWith("32", StringComparison.Ordinal))
+                    {
+                        class32bit = true;
+                    }
+                    else
+                    {
+                        class16bit = true;
+                    }
                 }
             }
 
@@ -1180,7 +1183,7 @@ namespace WixToolset
                 advertise = YesNoType.No;
             }
 
-            if (YesNoType.Yes == advertise && 0 == contexts.Length)
+            if (YesNoType.Yes == advertise && (null == contexts || 0 == contexts.Length))
             {
                 this.core.OnMessage(WixErrors.ExpectedAttribute(sourceLineNumbers, node.Name.LocalName, "Context", "Advertise", "yes"));
             }
@@ -1322,65 +1325,68 @@ namespace WixToolset
                 }
 
                 // add the core registry keys for each context in the class
-                foreach (string context in contexts)
+                if (null != contexts)
                 {
-                    if (context.StartsWith("InprocServer", StringComparison.Ordinal)) // dll server
+                    foreach (string context in contexts)
                     {
-                        if (null != argument)
+                        if (context.StartsWith("InprocServer", StringComparison.Ordinal)) // dll server
                         {
-                            this.core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "Arguments", "Context", context));
-                        }
-
-                        if (null != fileServer)
-                        {
-                            formattedContextString = String.Concat("[", shortServerPath ? "!" : "#", fileServer, "]");
-                        }
-                        else if (null != foreignServer)
-                        {
-                            formattedContextString = foreignServer;
-                        }
-                    }
-                    else if (context.StartsWith("LocalServer", StringComparison.Ordinal)) // exe server (quote the long path)
-                    {
-                        if (null != fileServer)
-                        {
-                            if (shortServerPath)
+                            if (null != argument)
                             {
-                                formattedContextString = String.Concat("[!", fileServer, "]");
+                                this.core.OnMessage(WixErrors.IllegalAttributeWithOtherAttribute(sourceLineNumbers, node.Name.LocalName, "Arguments", "Context", context));
                             }
-                            else
+
+                            if (null != fileServer)
                             {
-                                formattedContextString = String.Concat("\"[#", fileServer, "]\"");
+                                formattedContextString = String.Concat("[", shortServerPath ? "!" : "#", fileServer, "]");
+                            }
+                            else if (null != foreignServer)
+                            {
+                                formattedContextString = foreignServer;
                             }
                         }
-                        else if (null != foreignServer)
+                        else if (context.StartsWith("LocalServer", StringComparison.Ordinal)) // exe server (quote the long path)
                         {
-                            formattedContextString = foreignServer;
+                            if (null != fileServer)
+                            {
+                                if (shortServerPath)
+                                {
+                                    formattedContextString = String.Concat("[!", fileServer, "]");
+                                }
+                                else
+                                {
+                                    formattedContextString = String.Concat("\"[#", fileServer, "]\"");
+                                }
+                            }
+                            else if (null != foreignServer)
+                            {
+                                formattedContextString = foreignServer;
+                            }
+
+                            if (null != argument)
+                            {
+                                formattedContextString = String.Concat(formattedContextString, " ", argument);
+                            }
+                        }
+                        else
+                        {
+                            this.core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "Context", context, "InprocServer", "InprocServer32", "LocalServer", "LocalServer32"));
                         }
 
-                        if (null != argument)
+                        this.core.CreateRegistryRow(sourceLineNumbers, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context), String.Empty, formattedContextString, componentId); // ClassId context
+
+                        if (null != icon) // ClassId default icon
                         {
-                            formattedContextString = String.Concat(formattedContextString, " ", argument);
+                            this.core.CreateSimpleReference(sourceLineNumbers, "File", icon);
+
+                            icon = String.Format(CultureInfo.InvariantCulture, "\"[#{0}]\"", icon);
+
+                            if (CompilerConstants.IntegerNotSet != iconIndex)
+                            {
+                                icon = String.Concat(icon, ",", iconIndex);
+                            }
+                            this.core.CreateRegistryRow(sourceLineNumbers, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context, "\\DefaultIcon"), String.Empty, icon, componentId);
                         }
-                    }
-                    else
-                    {
-                        this.core.OnMessage(WixErrors.IllegalAttributeValue(sourceLineNumbers, node.Name.LocalName, "Context", context, "InprocServer", "InprocServer32", "LocalServer", "LocalServer32"));
-                    }
-
-                    this.core.CreateRegistryRow(sourceLineNumbers, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context), String.Empty, formattedContextString, componentId); // ClassId context
-
-                    if (null != icon) // ClassId default icon
-                    {
-                        this.core.CreateSimpleReference(sourceLineNumbers, "File", icon);
-
-                        icon = String.Format(CultureInfo.InvariantCulture, "\"[#{0}]\"", icon);
-
-                        if (CompilerConstants.IntegerNotSet != iconIndex)
-                        {
-                            icon = String.Concat(icon, ",", iconIndex);
-                        }
-                        this.core.CreateRegistryRow(sourceLineNumbers, MsiInterop.MsidbRegistryRootClassesRoot, String.Concat("CLSID\\", classId, "\\", context, "\\DefaultIcon"), String.Empty, icon, componentId);
                     }
                 }
 
@@ -1420,7 +1426,7 @@ namespace WixToolset
                 }
             }
 
-            if (null != threadingModel)
+            if (null != threadingModel && null != contexts)
             {
                 threadingModel = Compiler.UppercaseFirstChar(threadingModel);
 
