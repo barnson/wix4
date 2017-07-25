@@ -25,6 +25,7 @@ namespace WixToolset.Extensions
         /// </summary>
         public override void Initialize(Output output)
         {
+#if false // TODO: Fix tag extension for wix4
             // Only process MSI packages.
             if (OutputType.Product != output.Type)
             {
@@ -35,6 +36,7 @@ namespace WixToolset.Extensions
 
             // Ensure the tag files are generated to be imported by the MSI.
             this.CreateProductTagFiles(output);
+#endif
         }
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace WixToolset.Extensions
         /// </summary>
         public override void AfterResolvedFields(Output output)
         {
+#if false // TODO: Fix tag extension for wix4
             // Only process MSI packages.
             if (OutputType.Product != output.Type)
             {
@@ -58,6 +61,7 @@ namespace WixToolset.Extensions
                 Row row = wixBindUpdateFilesTable.CreateRow(updateFileRow.SourceLineNumbers);
                 row[0] = updateFileRow.File;
             }
+#endif
         }
 
         /// <summary>
@@ -65,6 +69,7 @@ namespace WixToolset.Extensions
         /// </summary>
         public override void Finish(Output output)
         {
+#if false // TODO: Fix tag extension for wix4
             // Only finish bundles.
             if (OutputType.Bundle != output.Type)
             {
@@ -100,6 +105,7 @@ namespace WixToolset.Extensions
                     }
                 }
             }
+#endif
         }
 
         private List<WixFileRow> CreateProductTagFiles(Output output)

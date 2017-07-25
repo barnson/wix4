@@ -14,10 +14,10 @@
             AboutUrl='!(loc.SupportUrl)' UpdateUrl='!(loc.UpdateUrl)'
             Compressed='$(var.WixBundleCompressed)'>
 
-        <swid:Tag Regid="regid.2008-09.org.wixtoolset" />
+        <swid:Tag Regid="!(loc.Regid)" InstallPath="[ProgramFilesFolder]WiX Toolset v$(var.WixMajorMinor)" />
         <Update Location='!(loc.UpdateUrl)' />
 
-        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense">
+        <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" bal:UseUILanguages="yes">
             <bal:WixStandardBootstrapperApplication LicenseUrl="http://wixtoolset.org/about/license/" />
         </BootstrapperApplicationRef>
 
